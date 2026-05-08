@@ -989,9 +989,9 @@ class The4KAgent:
                 break
 
         else:
-            best_img_path, best_img_score = self.evaluate_tool_result_onetime(res_degra_level_dict[self.reflect_by])
+            # best_img_path, best_img_score = self.evaluate_tool_result_onetime(res_degra_level_dict[self.reflect_by])
             # 👇 传入当前的 subtask 名字，激活我们的动态权重机制
-            # best_img_path, best_img_score = self.evaluate_tool_result_onetime(res_degra_level_dict[self.reflect_by], subtask)
+            best_img_path, best_img_score = self.evaluate_tool_result_onetime(res_degra_level_dict[self.reflect_by], subtask)
                 
             best_tool_name = self._get_name_stem(best_img_path.parents[1].name)
             self.workflow_logger.info(f"Best tool: {best_tool_name}")
@@ -1059,22 +1059,22 @@ class The4KAgent:
         hps_scores = [float(s) for s in hps_scores]
 
         if self.reflect_by == "hpsv2+metric":
-            result = [h + m for h, m in zip(hps_scores, metric_scores)]
+            # result = [h + m for h, m in zip(hps_scores, metric_scores)]
 
-            # # 👇 --- 创新点 2：退化自适应的动态 Q-MoE 权重 --- 👇
-            # metric_weight = 1.0
-            # if subtask in ["denoising", "jpeg compression artifact removal"]:
-            #     metric_weight = 1.5  # 噪声/伪影任务更看重客观保真度（NIQE等）
-            #     self.workflow_logger.info(f"【动态打分权重】触发：当前任务为 [{subtask}]，侧重客观保真度，Metric 权重提升至 {metric_weight}。")
-            # elif subtask in ["super-resolution", "super-resolution_2x"]:
-            #     metric_weight = 0.8  # 超分任务更看重主观生成感知（HPSv2）
-            #     self.workflow_logger.info(f"【动态打分权重】触发：当前任务为 [{subtask}]，侧重主观生成感知，Metric 权重下调至 {metric_weight}。")
-            # else:
-            #     # 其他常规任务保持默认权重
-            #     self.workflow_logger.info(f"【动态打分权重】常规：当前任务为 [{subtask}]，Metric 权重保持为默认值 {metric_weight}。")
+            # 👇 --- 创新点 2：退化自适应的动态 Q-MoE 权重 --- 👇
+            metric_weight = 1.0
+            if subtask in ["denoising", "jpeg compression artifact removal"]:
+                metric_weight = 1.5  # 噪声/伪影任务更看重客观保真度（NIQE等）
+                self.workflow_logger.info(f"【动态打分权重】触发：当前任务为 [{subtask}]，侧重客观保真度，Metric 权重提升至 {metric_weight}。")
+            elif subtask in ["super-resolution", "super-resolution_2x"]:
+                metric_weight = 0.8  # 超分任务更看重主观生成感知（HPSv2）
+                self.workflow_logger.info(f"【动态打分权重】触发：当前任务为 [{subtask}]，侧重主观生成感知，Metric 权重下调至 {metric_weight}。")
+            else:
+                # 其他常规任务保持默认权重
+                self.workflow_logger.info(f"【动态打分权重】常规：当前任务为 [{subtask}]，Metric 权重保持为默认值 {metric_weight}。")
             
-            # result = [h + (m * metric_weight) for h, m in zip(hps_scores, metric_scores)]
-            # # 👆 --- 修改结束 --- 👆
+            result = [h + (m * metric_weight) for h, m in zip(hps_scores, metric_scores)]
+            # 👆 --- 修改结束 --- 👆
 
             out_file = os.path.join(candidates_tmp_dir, "result_scores_with_metrics.txt")
             with open(out_file, "w", encoding="utf-8") as f:
@@ -1089,33 +1089,33 @@ class The4KAgent:
                     name = self._get_name_stem(cand.parents[1].name) if len(cand.parents) > 1 else "unknown"
                     f.write(f"image_{name}, {s:.6f}\n")
 
-        best_idx, best_score = max(enumerate(result), key=lambda x: x[1])
-        best_image = candidates[best_idx]
+        # best_idx, best_score = max(enumerate(result), key=lambda x: x[1])
+        # best_image = candidates[best_idx]
 
-        # # 👇 --- 创新点 4：基于专家置信度的像素级加权融合 (Top-K Blend) --- 👇
-        # # 👇👇👇 🚀【新增创新点 4：基于专家置信度的像素融合 (隐身覆盖版)】 👇👇👇
-        # sorted_cands = sorted(zip(candidates, result), key=lambda x: x[1], reverse=True)
-        # best_image, best_score = sorted_cands[0]  # 取第一名的路径
+        # 👇 --- 创新点 4：基于专家置信度的像素级加权融合 (Top-K Blend) --- 👇
+        # 👇👇👇 🚀【新增创新点 4：基于专家置信度的像素融合 (隐身覆盖版)】 👇👇👇
+        sorted_cands = sorted(zip(candidates, result), key=lambda x: x[1], reverse=True)
+        best_image, best_score = sorted_cands[0]  # 取第一名的路径
 
-        # # 如果至少有 2 个模型出图，触发融合策略兜底（防单一模型的幻觉伪影）
-        # if len(sorted_cands) >= 2:
-        #     second_img_path, second_score = sorted_cands[1]    
-        #     img1 = cv2.imread(str(best_image))
-        #     img2 = cv2.imread(str(second_img_path))
+        # 如果至少有 2 个模型出图，触发融合策略兜底（防单一模型的幻觉伪影）
+        if len(sorted_cands) >= 2:
+            second_img_path, second_score = sorted_cands[1]    
+            img1 = cv2.imread(str(best_image))
+            img2 = cv2.imread(str(second_img_path))
             
-        #     # 确保长宽一致才融合
-        #     if img1 is not None and img2 is not None and img1.shape == img2.shape:
-        #         self.workflow_logger.info(f"【专家加权融合】触发：将 Top-2 细节隐式融合进 Top-1 ({best_image.parent.name}) 中。")
-        #         total_s = abs(best_score) + abs(second_score) + 1e-5  # 计算动态置信度 (防止分母过小，加绝对值处理)
-        #         alpha = max(0.55, min(abs(best_score) / total_s, 0.8)) # 将权重限制在合理范围，主模型主导
+            # 确保长宽一致才融合
+            if img1 is not None and img2 is not None and img1.shape == img2.shape:
+                self.workflow_logger.info(f"【专家加权融合】触发：将 Top-2 细节隐式融合进 Top-1 ({best_image.parent.name}) 中。")
+                total_s = abs(best_score) + abs(second_score) + 1e-5  # 计算动态置信度 (防止分母过小，加绝对值处理)
+                alpha = max(0.55, min(abs(best_score) / total_s, 0.8)) # 将权重限制在合理范围，主模型主导
                 
-        #         # OpenCV 加权融合
-        #         blended_img = cv2.addWeighted(img1, alpha, img2, 1 - alpha, 0)
+                # OpenCV 加权融合
+                blended_img = cv2.addWeighted(img1, alpha, img2, 1 - alpha, 0)
                 
-        # # ！！！核心神操作：不存新路径，直接把融合后的图覆盖回第一名的原路径！
-        #         cv2.imwrite(str(best_image), blended_img)
-        #         # best_image 的路径字符串完全没变，完美骗过外层的 ImgTree 解析逻辑！
-        # # 👆👆👆 ---------------- 修改结束 ---------------- 👆👆👆
+        # ！！！核心神操作：不存新路径，直接把融合后的图覆盖回第一名的原路径！
+                cv2.imwrite(str(best_image), blended_img)
+                # best_image 的路径字符串完全没变，完美骗过外层的 ImgTree 解析逻辑！
+        # 👆👆👆 ---------------- 修改结束 ---------------- 👆👆👆
 
 
         # Release memory
