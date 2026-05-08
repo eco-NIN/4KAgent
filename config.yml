@@ -1,0 +1,28 @@
+# GPT:
+#   API_KEY: ""
+#   MODEL: "gpt-4-turbo"
+#   MAX_TOKENS: 3000
+#   TEMPERATURE: 0.0
+
+
+GPT:
+  API_KEY: "sk-615f94232e8b47179d7269bbb0b34f4a"
+  # MODEL: "qwen2.5-omni-7b"
+  MODEL: "qwen3-omni-flash"
+  MAX_TOKENS: 2000
+  TEMPERATURE: 0.0
+
+  
+LLAMA:
+  API_KEY: ""
+  MODEL: "llama3.1-405b"
+  MAX_TOKENS: 3000
+  TEMPERATURE: 0.0
+
+AZUREGPT:
+  API_KEY: ""
+  MODEL: ""
+  MAX_TOKENS: 3000
+  TEMPERATURE: 0.0
+  ENDPOINT: ""
+  API_VERSION: ""

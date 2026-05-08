@@ -1,0 +1,13 @@
+Name: Gen4K-P
+
+PerceptionAgent: gpt4v  
+Reflection: hpsv2+metric  
+
+Upscale4K: true
+ScaleFactor: null
+RestoreOption: null
+
+FaceRestore: true
+Brightening: false
+
+RestorePerference: Perception

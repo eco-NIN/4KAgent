@@ -1,0 +1,19 @@
+Name: MyAgent_API
+ 
+PerceptionAgent: gpt4v
+PerceptionAgent_Seed: 1994
+Reflection: hpsv2+metric
+
+Upscale4K: false
+ScaleFactor: 4
+RestoreOption: super-resolution
+# RestoreOption: null
+
+# FaceRestore: true
+FaceRestore: false
+Brightening: false
+
+RestorePerference: Perception
+# RestorePerference: Fidelity
+
+# with_rollback: true
